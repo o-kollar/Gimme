@@ -1,6 +1,6 @@
 # Gimme
 
-Moderná webová aplikácia na generovanie platobných QR kódov (PayBySquare), vytváranie platobných odkazov a odosielanie žiadostí o platbu.
+Moderná webová aplikácia na generovanie platobných QR kódov, vytváranie platobných odkazov a odosielanie žiadostí o platbu.
 
 ![PWA Ready](https://img.shields.io/badge/PWA-pripravené-green)
 ![Vue.js](https://img.shields.io/badge/Vue.js-3-4FC08D?logo=vue.js)
@@ -178,3 +178,4 @@ Nostr umožňuje **odosielať žiadosti o platbu priamo** príjemcovi bez potreb
 | **Bez registrácie** | Nepotrebujete vytvárať účty na žiadnych službách |
 
 ---
+
