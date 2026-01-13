@@ -1076,7 +1076,7 @@
                 class="flex-1 bg-white/20 border-0 rounded-lg px-3 py-2 text-sm text-white outline-none">
             </div>
 
-            <div class="grid grid-cols-3 gap-4">
+            <div class="grid grid-cols-2 gap-4">
               <div class="text-center">
                 <p class="text-2xl font-extrabold">{{ filteredAnalytics.totalCount }}</p>
                 <p class="text-[10px] uppercase tracking-wider text-indigo-200">Platieb</p>
@@ -1085,30 +1085,87 @@
                 <p class="text-2xl font-extrabold">{{ filteredAnalytics.totalAmount.toFixed(0) }}€</p>
                 <p class="text-[10px] uppercase tracking-wider text-indigo-200">Celkom</p>
               </div>
-              <div class="text-center">
-                <p class="text-2xl font-extrabold">{{ filteredAnalytics.avgAmount.toFixed(0) }}€</p>
-                <p class="text-[10px] uppercase tracking-wider text-indigo-200">Priemer</p>
-              </div>
             </div>
 
-            <!-- Tag/Category Analytics -->
-            <div v-if="filteredAnalytics.tagBreakdown.length > 0" class="mt-4 pt-4 border-t border-white/20">
-              <p class="text-[10px] uppercase tracking-wider text-indigo-200 mb-3">Podľa kategórie</p>
-              <div class="space-y-2">
-                <div v-for="tagStat in filteredAnalytics.tagBreakdown" :key="tagStat.tag"
-                  class="flex items-center gap-2">
-                  <div class="w-3 h-3 rounded-full flex-shrink-0" :style="{ background: tagStat.color }"></div>
-                  <span class="text-xs font-medium flex-1">{{ tagStat.label }}</span>
-                  <span class="text-xs font-bold">{{ tagStat.amount.toFixed(0) }}€</span>
-                  <span class="text-[10px] text-indigo-200">({{ tagStat.count }}x)</span>
+            <!-- Carousel Breakdown Metrics -->
+            <div class="mt-4 pt-4 border-t border-white/20 relative group">
+              <!-- Scrollable Area -->
+              <div ref="analyticsCarousel" class="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide"
+                @scroll="onAnalyticsScroll">
+
+                <!-- Slide 1: By Category -->
+                <div class="w-full flex-shrink-0 snap-center px-1">
+                  <p class="text-[10px] uppercase tracking-wider text-indigo-200 mb-3 text-center">Podľa kategórie</p>
+                  <div class="space-y-2">
+                    <div v-if="filteredAnalytics.tagBreakdown.length === 0" class="text-xs text-white/50 text-center italic">Žiadne dáta</div>
+                    <div v-for="tagStat in filteredAnalytics.tagBreakdown" :key="tagStat.tag"
+                      class="flex items-center gap-2">
+                      <div class="w-3 h-3 rounded-full flex-shrink-0" :style="{ background: tagStat.color }"></div>
+                      <span class="text-xs font-medium flex-1">{{ tagStat.label }}</span>
+                      <span class="text-xs font-bold">{{ tagStat.amount.toFixed(0) }}€</span>
+                      <span class="text-[10px] text-indigo-200">({{ tagStat.count }}x)</span>
+                    </div>
+                  </div>
+                  <!-- Visual Bar Chart -->
+                  <div v-if="filteredAnalytics.tagBreakdown.length > 0" class="mt-3 flex gap-1 h-4 rounded-full overflow-hidden bg-white/10">
+                    <div v-for="tagStat in filteredAnalytics.tagBreakdown" :key="tagStat.tag + '-bar'"
+                      class="h-full transition-all duration-500"
+                      :style="{ width: (tagStat.amount / filteredAnalytics.totalAmount * 100) + '%', background: tagStat.color }">
+                    </div>
+                  </div>
                 </div>
+
+                <!-- Slide 2: Paid vs Unpaid -->
+                <div class="w-full flex-shrink-0 snap-center px-1">
+                  <p class="text-[10px] uppercase tracking-wider text-indigo-200 mb-3 text-center">Zaplatené / Nezaplatené</p>
+                  <div class="space-y-2">
+                    <div v-if="filteredAnalytics.statusBreakdown.length === 0" class="text-xs text-white/50 text-center italic">Žiadne dáta</div>
+                    <div v-for="stat in filteredAnalytics.statusBreakdown" :key="stat.label" class="flex items-center gap-2">
+                      <div class="w-3 h-3 rounded-full flex-shrink-0" :class="stat.colorClass"></div>
+                      <span class="text-xs font-medium flex-1">{{ stat.label }}</span>
+                      <span class="text-xs font-bold">{{ stat.amount.toFixed(0) }}€</span>
+                      <span class="text-[10px] text-indigo-200">({{ stat.count }}x)</span>
+                    </div>
+                  </div>
+                   <!-- Visual Bar Chart -->
+                   <div v-if="filteredAnalytics.statusBreakdown.length > 0" class="mt-3 flex gap-1 h-4 rounded-full overflow-hidden bg-white/10">
+                    <div v-for="stat in filteredAnalytics.statusBreakdown" :key="stat.label + '-bar'"
+                      class="h-full transition-all duration-500"
+                      :class="stat.bgClass"
+                      :style="{ width: (stat.amount / filteredAnalytics.totalAmount * 100) + '%' }">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Slide 3: Incoming vs Outgoing -->
+                <div class="w-full flex-shrink-0 snap-center px-1">
+                  <p class="text-[10px] uppercase tracking-wider text-indigo-200 mb-3 text-center">Žiadosti</p>
+                  <div class="space-y-2">
+                    <div v-if="filteredAnalytics.directionBreakdown.length === 0" class="text-xs text-white/50 text-center italic">Žiadne dáta</div>
+                    <div v-for="stat in filteredAnalytics.directionBreakdown" :key="stat.label" class="flex items-center gap-2">
+                      <div class="w-3 h-3 rounded-full flex-shrink-0" :class="stat.colorClass"></div>
+                      <span class="text-xs font-medium flex-1">{{ stat.label }}</span>
+                      <span class="text-xs font-bold">{{ stat.amount.toFixed(0) }}€</span>
+                      <span class="text-[10px] text-indigo-200">({{ stat.count }}x)</span>
+                    </div>
+                  </div>
+                   <!-- Visual Bar Chart -->
+                   <div v-if="filteredAnalytics.directionBreakdown.length > 0" class="mt-3 flex gap-1 h-4 rounded-full overflow-hidden bg-white/10">
+                    <div v-for="stat in filteredAnalytics.directionBreakdown" :key="stat.label + '-bar'"
+                      class="h-full transition-all duration-500"
+                      :class="stat.bgClass"
+                      :style="{ width: (stat.amount / filteredAnalytics.totalAmount * 100) + '%' }">
+                    </div>
+                  </div>
+                </div>
+
               </div>
-              <!-- Visual Bar Chart -->
-              <div class="mt-3 flex gap-1 h-4 rounded-full overflow-hidden bg-white/10">
-                <div v-for="tagStat in filteredAnalytics.tagBreakdown" :key="tagStat.tag + '-bar'"
-                  class="h-full transition-all duration-500"
-                  :style="{ width: (tagStat.amount / filteredAnalytics.totalAmount * 100) + '%', background: tagStat.color }">
-                </div>
+
+              <!-- Pagination Dots -->
+              <div class="flex justify-center gap-1.5 mt-3">
+                <div v-for="i in 3" :key="i"
+                  class="w-1.5 h-1.5 rounded-full transition-all duration-300"
+                  :class="activeAnalyticsSlide === i-1 ? 'bg-white w-3' : 'bg-white/40'"></div>
               </div>
             </div>
 
@@ -1715,6 +1772,7 @@
         // Elements
         const carouselRef = ref(null);
         const qrcodeContainer = ref(null);
+        const analyticsCarousel = ref(null);
 
         // App State
         const isDarkMode = ref(false);
@@ -1793,83 +1851,67 @@
         const tutorialSteps = [
           {
             icon: '👋',
-            title: 'Vitajte v Gimme!',
-            description: 'Aplikácia na generovanie platobných QR kódov kompatibilných so všetkými slovenskými bankami. Podporuje AI skenovanie, Nostr a ďalšie funkcie.',
+            title: 'Poďme na to!',
+            description: 'Už žiadne diktovanie IBANu do telefónu.',
             color: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
             target: null,
             position: 'center'
           },
           {
             icon: '💳',
-            title: 'Správa bankových účtov',
-            description: 'Potiahnutím doprava/doľava prepínate medzi účtami. Každý účet môže mať vlastný štítok, farbu a emoji. Hviezdičkou označíte predvolený účet. Kliknite na "+" pre pridanie nového.',
+            title: 'Tvoja peňaženka',
+            description: 'Sem patrí tvoj IBAN. Ak máš viac účtov, jednoducho medzi nimi prepínaj potiahnutím do strany.',
             color: 'linear-gradient(135deg, #3b82f6, #06b6d4)',
             target: 'cardArea',
             position: 'bottom'
           },
           {
-            icon: '🧮',
-            title: 'Suma a kalkulačka',
-            description: 'Zadajte sumu platby alebo kliknite na ikonu kalkulačky pre výpočty priamo v aplikácii. Zobrazujú sa aj nedávno použité sumy pre rýchly výber.',
+            icon: '💰',
+            title: 'Koľko to bude?',
+            description: 'Naťukaj sumu. Je tu aj malú kalkulačku, ak potrebuješ v rýchlosti rozrátať napríklad spoločný obed.',
             color: 'linear-gradient(135deg, #10b981, #14b8a6)',
             target: 'inputsArea',
             position: 'top'
           },
           {
-            icon: '📷',
-            title: 'AI skenovanie (Gemini)',
-            description: 'Odfotografujte účtenku alebo faktúru a AI automaticky rozpozná sumu a popis. Vyžaduje bezplatný Gemini API kľúč z Google AI Studio (nastavíte v ⚙️).',
+            icon: '📸',
+            title: 'Nechce sa ti písať?',
+            description: 'Odfoť účtenku cez túto ikonku. Umelá inteligencia sama nájde sumu aj za čo to bolo a pripraví žiadosť za teba.',
             color: 'linear-gradient(135deg, #ec4899, #f43f5e)',
             target: 'attachBtn',
             position: 'top'
           },
           {
-            icon: '📱',
-            title: 'Generovanie QR kódu',
-            description: 'Stlačte "Vyžiadať platbu" a zobrazí sa QR kód s Payme odkazom. Môžete ho zdieľať (ikona zdieľania), alebo poslať priamo cez Nostr protokol tlačidlom "Vyžiadať".',
+            icon: '🚀',
+            title: 'Odoslať žiadosť',
+            description: 'Klikni na "Vyžiadať" a je to. Výsledok môžeš ukázať na displeji, alebo poslať link cez Messenger, WhatsApp či priamo uloženým kontaktom.',
             color: 'linear-gradient(135deg, #f97316, #f59e0b)',
             target: 'generateBtn',
             position: 'top'
           },
           {
             icon: '📋',
-            title: 'Šablóny platieb',
-            description: 'Uložte si opakujúce sa platby ako šablóny (nájom, predplatné...). Šablóny môžete vyhľadávať podľa názvu, sumy, VS alebo správy. Jedným kliknutím aplikujete šablónu.',
+            title: 'Uľahči si to',
+            description: 'Robíš rovnakú žiadosť dookola? Ulož si ju sem ako šablónu (napr. Nájom) a nabudúce to máš vybavené na jeden klik.',
             color: 'linear-gradient(135deg, #10b981, #059669)',
             target: 'templatesBtn',
             position: 'bottom'
           },
           {
             icon: '📊',
-            title: 'História a analytika',
-            description: 'Sledujte všetky platby s filtrovaním podľa obdobia (dnes, týždeň, mesiac, rok). Zobrazuje štatistiky: celkovú sumu, priemer a rozdelenie podľa kategórií. Označujte platby ako zaplatené.',
+            title: 'História žiadostí',
+            description: 'Tu nájdeš zoznam všetkého, čo si vytvoril. Hneď vidíš, ktoré žiadosti sú už vybavené a ktoré ešte čakajú.',
             color: 'linear-gradient(135deg, #8b5cf6, #d946ef)',
             target: 'historyBtn',
             position: 'bottom'
           },
           {
             icon: '⚙️',
-            title: 'Nastavenia a Nostr',
-            description: 'Zmeňte tému (svetlá/tmavá/systém), farbu akcentu. Nastavte Gemini API kľúč pre AI. Spravujte Nostr identitu a zdieľajte svoj odkaz – príjemca vás môže pridať do adresára.',
+            title: 'Nastavenia',
+            description: 'Chceš tmavý režim, inú farbu apky alebo pridať kľúč pre AI skenovanie? Všetky tieto úpravy a správu kontaktov nájdeš tu.',
             color: 'linear-gradient(135deg, #475569, #1e293b)',
             target: 'settingsBtn',
             position: 'bottom'
-          },
-          {
-            icon: '🌐',
-            title: 'Nostr protokol',
-            description: 'Nostr umožňuje posielať žiadosti o platbu priamo príjemcom. Môžete vybrať viacero kontaktov naraz pre rozdelenie účtu (split bill). Váš NPUB zdieľajte, NSEC nikdy!',
-            color: 'linear-gradient(135deg, #a855f7, #6366f1)',
-            target: null,
-            position: 'center'
-          },
-          {
-            icon: '🚀',
-            title: 'Všetko je pripravené!',
-            description: 'Tutoriál môžete kedykoľvek spustiť znova v Nastaveniach. Všetky dáta zostávajú bezpečne uložené vo vašom prehliadači. Príjemné používanie!',
-            color: 'linear-gradient(135deg, #f43f5e, #ec4899)',
-            target: null,
-            position: 'center'
           }
         ];
 
@@ -2033,6 +2075,15 @@
         const analyticsDateRange = ref('month');
         const customDateFrom = ref('');
         const customDateTo = ref('');
+        const activeAnalyticsSlide = ref(0);
+
+        const onAnalyticsScroll = () => {
+          if (analyticsCarousel.value) {
+            const scrollLeft = analyticsCarousel.value.scrollLeft;
+            const width = analyticsCarousel.value.offsetWidth;
+            activeAnalyticsSlide.value = Math.round(scrollLeft / width);
+          }
+        };
 
         // Custom tags
         const showCustomTagForm = ref(false);
@@ -2188,7 +2239,7 @@
         // Filtered analytics with date range and tag breakdown
         const filteredAnalytics = computed(() => {
           const now = new Date();
-          let filtered = paymentHistory.value.filter(h => h.status === 'paid'); // Only count paid payments
+          let filtered = paymentHistory.value; // Start with all payments
 
           // Apply date filter
           if (analyticsDateRange.value === 'today') {
@@ -2217,23 +2268,16 @@
             });
           }
 
+          // Calculate summary stats (count both paid and unpaid/incoming for context)
           const totalCount = filtered.length;
           const totalAmount = filtered.reduce((sum, h) => sum + Number(h.amount), 0);
-          const avgAmount = totalCount > 0 ? totalAmount / totalCount : 0;
-
-          // Top accounts
-          const accountCounts = {};
-          filtered.forEach(h => {
-            accountCounts[h.accountName] = (accountCounts[h.accountName] || 0) + 1;
-          });
-          const topAccounts = Object.entries(accountCounts)
-            .map(([name, count]) => ({ name, count }))
-            .sort((a, b) => b.count - a.count)
-            .slice(0, 3);
-
-          // Tag breakdown
+          
+          // 1. Tag Breakdown (Categories)
           const tagStats = {};
           filtered.forEach(h => {
+            // EXCLUDE INCOMING FROM TAG BREAKDOWN
+            if (h.status === 'incoming') return;
+
             const tag = h.tag || 'other';
             if (!tagStats[tag]) {
               tagStats[tag] = { tag, amount: 0, count: 0 };
@@ -2249,7 +2293,50 @@
             }))
             .sort((a, b) => b.amount - a.amount);
 
-          return { totalCount, totalAmount, avgAmount, topAccounts, tagBreakdown };
+          // 2. Status Breakdown (Paid vs Unpaid)
+          // We treat 'incoming' as pending/unpaid generally, but for this chart:
+          // Paid = status === 'paid'
+          // Unpaid = everything else
+          const statusStats = {
+            paid: { label: 'Zaplatené', amount: 0, count: 0, colorClass: 'bg-green-500', bgClass: 'bg-green-500' },
+            unpaid: { label: 'Nezaplatené', amount: 0, count: 0, colorClass: 'bg-red-500', bgClass: 'bg-red-500' }
+          };
+          filtered.forEach(h => {
+            if (h.status === 'paid') {
+              statusStats.paid.amount += Number(h.amount);
+              statusStats.paid.count += 1;
+            } else {
+              statusStats.unpaid.amount += Number(h.amount);
+              statusStats.unpaid.count += 1;
+            }
+          });
+          const statusBreakdown = Object.values(statusStats).sort((a, b) => b.amount - a.amount);
+
+          // 3. Direction Breakdown (Incoming vs Outgoing)
+          // Incoming = status === 'incoming' (requests from Nostr)
+          // Outgoing = everything else (payments I created)
+          const directionStats = {
+            outgoing: { label: 'Odoslané', amount: 0, count: 0, colorClass: 'bg-indigo-500', bgClass: 'bg-indigo-500' },
+            incoming: { label: 'Prijaté', amount: 0, count: 0, colorClass: 'bg-purple-500', bgClass: 'bg-purple-500' }
+          };
+          filtered.forEach(h => {
+            if (h.status === 'incoming') {
+              directionStats.incoming.amount += Number(h.amount);
+              directionStats.incoming.count += 1;
+            } else {
+              directionStats.outgoing.amount += Number(h.amount);
+              directionStats.outgoing.count += 1;
+            }
+          });
+          const directionBreakdown = Object.values(directionStats).sort((a, b) => b.amount - a.amount);
+
+          return { 
+            totalCount, 
+            totalAmount, 
+            tagBreakdown,
+            statusBreakdown,
+            directionBreakdown
+          };
         });
 
         // Helper to get today's date in YYYY-MM-DD format
@@ -3351,10 +3438,10 @@
         });
 
         return {
-          carouselRef, qrcodeContainer, settingsBtn, templatesBtn, historyBtn, cardArea, inputsArea, attachBtn,
+          carouselRef, qrcodeContainer, settingsBtn, templatesBtn, historyBtn, cardArea, inputsArea, attachBtn, analyticsCarousel,
           isDarkMode, showSettings, themeMode, accentColor, accentColors, isAddingProfile, isEditingProfile, isQrVisible, paymeLinkCopied, showHistory, showTemplates, showCustomTagForm, showAmountSuggestions, attachedFile,
           payment, newProfile, profiles, activeProfileName, allTags, paymentHistory, analytics, filteredAnalytics, templates, filteredTemplates, templateSearch, newTemplate, isAddingTemplate, isEditingTemplate, unpaidPendingCount,
-          customTag, customTags, availableEmojis, tagColors, analyticsDateRange, customDateFrom, customDateTo, recentAmounts, ibanError,
+          customTag, customTags, availableEmojis, tagColors, analyticsDateRange, customDateFrom, customDateTo, recentAmounts, ibanError, activeAnalyticsSlide, onAnalyticsScroll,
           showCalculator, calcDisplay, calcResult, toggleCalculator, calcInput, calcClear, calcBackspace, calcApply,
           showTutorial, tutorialStep, tutorialSteps, tutorialCompleted, tooltipPosition, nextTutorialStep, prevTutorialStep, skipTutorial, restartTutorial,
           setThemeMode, setAccentColor, saveProfile, deleteProfile, toggleDefaultProfile, editProfile, cancelProfileForm, formatIban, getBankName, getCardColorClass, getTagLabel, getTagEmoji, getTagColor, selectTag, addCustomTag, generateVariableSymbol, generateQRCode, copyPaymeLink, sharePaymeLink,
@@ -3373,4 +3460,4 @@
   </script>
 </body>
 
-</html>
+            </html>
