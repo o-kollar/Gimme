@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="sk" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gimme - Platby. Jednoducho.</title>
+    <meta name="description" content="Najjednoduchší spôsob ako vytvárať Payme QR kódy.">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="favicon/favicon-32x32.png">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                fontFamily: {
+                    sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+                },
+                extend: {
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'float-delayed': 'float 6s ease-in-out 3s infinite',
+                        'aurora': 'aurora 20s linear infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0) rotate(0deg)' },
+                            '50%': { transform: 'translateY(-10px) rotate(2deg)' },
+                        },
+                        aurora: {
+                            '0%': { transform: 'rotate(0deg)' },
+                            '100%': { transform: 'rotate(360deg)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Typography Polish */
+        body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+
+        /* Glassmorphism */
+        .glass {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+        }
+        .dark .glass {
+            background: rgba(20, 20, 23, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        /* Bottom Dock Transition */
+        #bottom-dock { transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+        .dock-hidden { transform: translateY(150%) scale(0.95); opacity: 0; }
+        .dock-visible { transform: translateY(0) scale(1); opacity: 1; }
+
+        /* Scroll Reveal Animation */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px) scale(0.98);
+            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .reveal.active { opacity: 1; transform: translateY(0) scale(1); }
+
+        /* Text Gradient */
+        .text-gradient {
+            background: linear-gradient(135deg, #1a1a1a 0%, #4a4a4a 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .dark .text-gradient {
+            background: linear-gradient(135deg, #ffffff 0%, #a1a1aa 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        /* --- FEATURE CARD & SHEET LOGIC --- */
+        .feature-card {
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+        }
+        
+        .info-sheet {
+            position: absolute;
+            inset: 0;
+            z-index: 30;
+            transform: translateY(105%);
+            transition: transform 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background-color: rgba(255, 255, 255, 0.98); 
+        }
+
+        .dark .info-sheet {
+            background-color: rgba(21, 21, 22, 0.98);
+        }
+
+        .feature-card.details-open .info-sheet {
+            transform: translateY(0%);
+        }
+
+        /* Info Button Styling */
+        .info-btn {
+            position: absolute;
+            top: 1.25rem;
+            right: 1.25rem;
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 999px;
+            background: rgba(0,0,0,0.05);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 40;
+            transition: all 0.3s ease;
+            color: #1e293b;
+        }
+
+        .dark .info-btn {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+        
+        /* White Info Button for Colored Cards */
+        .info-btn-white {
+            color: white !important;
+            background: rgba(255,255,255,0.2) !important;
+        }
+        .info-btn-white:hover {
+            background: rgba(255,255,255,0.3) !important;
+        }
+
+        /* Desktop: Show on hover */
+        @media (hover: hover) {
+            .info-btn { opacity: 0; transform: scale(0.8); }
+            .feature-card:hover .info-btn { opacity: 1; transform: scale(1); }
+        }
+        /* Mobile: Always visible */
+        @media (hover: none) {
+            .info-btn { opacity: 1; transform: scale(1); }
+        }
+        .feature-card.details-open .info-btn { opacity: 1; transform: scale(1); }
+
+        /* Icon Rotation */
+        .info-btn svg { transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .feature-card.details-open .info-btn svg { transform: rotate(135deg); }
+        
+        /* Close State BG */
+        .feature-card.details-open .info-btn {
+            background: rgba(0,0,0,0.1);
+            color: #1e293b; 
+        }
+        .dark .feature-card.details-open .info-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        /* --- OTHER STYLES --- */
+        .phone-mockup {
+            box-shadow: 0 0 0 12px #1e293b, 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            border-radius: 2.5rem;
+            overflow: hidden;
+            position: relative;
+            background: #0f172a;
+            transform: rotate(3deg);
+        }
+        .phone-notch {
+            position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+            width: 40%; height: 28px; background: #1e293b;
+            border-bottom-left-radius: 14px; border-bottom-right-radius: 14px; z-index: 20;
+        }
+        .aurora-blob {
+            position: absolute; width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.05) 50%, transparent 70%);
+            border-radius: 50%; filter: blur(60px); z-index: -1;
+            animation: aurora 20s infinite linear;
+        }
+        
+        /* QR Dot Pattern for Payme Card */
+        .qr-dots {
+            background-image: radial-gradient(#cbd5e1 20%, transparent 20%);
+            background-size: 8px 8px;
+        }
+        .dark .qr-dots {
+            background-image: radial-gradient(#334155 20%, transparent 20%);
+        }
+    </style>
+</head>
+<body class="bg-[#fbfbfd] dark:bg-[#000000] text-slate-900 dark:text-white transition-colors duration-500 overflow-x-hidden pb-32">
+
+    <!-- Background -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none">
+        <div class="aurora-blob top-[-20%] left-[-10%] bg-blue-500/10"></div>
+        <div class="aurora-blob bottom-[-20%] right-[-10%] bg-purple-500/10 animation-delay-5000"></div>
+    </div>
+
+    <!-- Header -->
+    <header class="absolute top-0 left-0 right-0 z-40 px-6 py-6 flex justify-center">
+        <div class="flex items-center gap-2 opacity-50 hover:opacity-100 transition-opacity cursor-pointer" onclick="window.scrollTo(0,0)">
+            <div class="w-6 h-6 bg-black dark:bg-white text-white dark:text-black rounded-md flex items-center justify-center shadow-md">
+               <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+            </div>
+            <span class="font-bold text-sm tracking-tight dark:text-white">Gimme</span>
+        </div>
+    </header>
+
+    <!-- Dock -->
+    <div id="bottom-dock" class="fixed bottom-8 left-0 right-0 z-50 flex justify-center px-4 dock-hidden pointer-events-none">
+        <div class="glass rounded-full p-2 pr-2 pl-4 shadow-2xl flex items-center gap-4 pointer-events-auto transform transition-transform hover:scale-[1.02]">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-black dark:bg-white text-white dark:text-black rounded-full flex items-center justify-center shadow-md">
+                   <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                </div>
+                <div class="hidden sm:block">
+                    <p class="text-xs font-bold text-slate-900 dark:text-white leading-none">Gimme</p>
+                    <p class="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Platby jednoducho</p>
+                </div>
+            </div>
+            <div class="w-px h-8 bg-slate-200 dark:bg-slate-700/50 hidden sm:block"></div>
+            <a href="./app/" class="bg-[#0071e3] hover:bg-[#0077ED] text-white text-sm font-bold px-6 py-3 rounded-full transition-all active:scale-95 shadow-lg shadow-blue-500/20 flex items-center gap-2">
+                <span>Otvoriť aplikáciu</span>
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+            </a>
+        </div>
+    </div>
+
+    <!-- Hero -->
+    <section class="relative pt-40 pb-20 lg:pt-52 lg:pb-32 px-6">
+        <div class="max-w-[1200px] mx-auto text-center flex flex-col items-center">
+            <div class="reveal">
+                <h1 class="text-6xl md:text-8xl font-bold tracking-tighter mb-6 text-gradient leading-[1.1]">Platby.<br>Jednoducho.</h1>
+                <p class="text-xl md:text-2xl text-slate-500 dark:text-slate-400 max-w-2xl mx-auto font-medium leading-relaxed mb-12">Bez registrácie, bez poplatkov, priamo v prehliadači.</p>
+                <div class="flex justify-center mb-20">
+                    <a id="hero-cta" href="./app/" class="group relative px-10 py-5 bg-slate-900 dark:bg-white text-white dark:text-black rounded-full font-bold text-xl transition-all hover:scale-105 active:scale-95 shadow-2xl shadow-slate-500/20">
+                        Spustiť Aplikáciu
+                        <span class="absolute inset-0 rounded-full ring-4 ring-white/10 dark:ring-black/5 group-hover:ring-8 transition-all duration-300"></span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Phone -->
+            <div class="reveal relative z-10 w-full max-w-[320px] md:max-w-[360px] animate-float">
+                <div class="phone-mockup aspect-[9/19]">
+    <div class="phone-notch"></div>
+
+    <div class="w-full h-full bg-slate-50 dark:bg-[#0f172a] flex flex-col p-5 pt-12 relative overflow-hidden gap-6">
+
+        <!-- Top bar shapes -->
+        <div class="flex justify-between items-center">
+            <div class="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800"></div>
+            <div class="flex gap-2">
+                <div class="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-800"></div>
+                <div class="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/50"></div>
+            </div>
+        </div>
+
+        <!-- Gradient card -->
+        <div class="w-full aspect-[1.58/1] rounded-3xl bg-gradient-to-br from-indigo-600 to-purple-700 p-6 shadow-2xl shadow-indigo-500/30 relative overflow-hidden">
+            <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
+            <div class="absolute bottom-6 left-6 w-32 h-6 bg-white/20 rounded-lg"></div>
+        </div>
+
+        <!-- Amount placeholder card -->
+        <div class="bg-white dark:bg-slate-800 rounded-[1.25rem] p-6 border border-slate-200 dark:border-slate-700 shadow-sm">
+            <div class="h-3 w-24 bg-slate-200 dark:bg-slate-700 rounded-full mb-3"></div>
+            <div class="h-8 w-40 bg-slate-300 dark:bg-slate-600 rounded-xl"></div>
+        </div>
+
+        <!-- Bottom buttons -->
+        <div class="flex gap-3 mt-auto mb-2">
+            <div class="w-14 h-14 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg"></div>
+            <div class="flex-1 h-14 rounded-full bg-gradient-to-r from-indigo-500 to-indigo-600 shadow-lg shadow-indigo-500/20"></div>
+        </div>
+
+    </div>
+</div><div class="absolute -inset-4 bg-gradient-to-b from-indigo-500 to-purple-600 rounded-[4rem] blur-[60px] opacity-20 z-[-1]"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Bento Grid Features -->
+    <section id="features" class="py-24 bg-white dark:bg-[#0a0a0a]">
+        <div class="max-w-[1000px] mx-auto px-6">
+            <div class="reveal mb-12">
+                <h2 class="text-4xl md:text-5xl font-bold tracking-tight mb-4 dark:text-white">Výkonný.<br>Súkromný.</h2>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[minmax(200px,auto)]">
+                
+                <!-- Feature 1: Payme Standard (Large + Visuals) -->
+                <div class="reveal feature-card md:col-span-2 bg-slate-50 dark:bg-[#151516] rounded-[2rem] p-8 md:p-10 relative overflow-hidden group border border-slate-100 dark:border-white/5">
+                    <button class="info-btn" onclick="toggleDetails(this)" aria-label="Viac info">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                    </button>
+                    <div class="relative z-10 flex flex-col md:flex-row gap-6 items-start md:items-center h-full pointer-events-none">
+                        <div class="flex-1">
+                            <h3 class="text-2xl font-bold mb-2 dark:text-white">Payme Štandard</h3>
+                            <p class="text-slate-500 dark:text-slate-400 max-w-sm">Univerzálny kľúč k peniazom tvojich známych.</p>
+                        </div>
+                        <!-- Abstract QR/Bank Visual -->
+                        <div class="relative w-40 h-40 flex-shrink-0 hidden md:block group-hover:scale-105 transition-transform duration-500">
+                             <!-- Back Card -->
+                             <div class="absolute top-0 right-0 w-32 h-20 bg-slate-200 dark:bg-slate-700 rounded-xl transform rotate-6 animate-float-delayed border border-white/20"></div>
+                             <!-- Front Card -->
+                             <div class="absolute top-4 right-4 w-32 h-32 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-100 dark:border-slate-700 flex items-center justify-center animate-float">
+                                 <div class="w-20 h-20 qr-dots opacity-50"></div>
+                                 <div class="absolute inset-0 flex items-center justify-center">
+                                     <div class="bg-blue-500 text-white rounded-full p-1 shadow-md">
+                                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
+                                     </div>
+                                 </div>
+                             </div>
+                        </div>
+                    </div>
+                    
+                    <div class="absolute right-0 bottom-0 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl group-hover:bg-blue-500/20 transition-all duration-700"></div>
+                    
+                    <!-- Sheet -->
+                    <div class="info-sheet">
+                        <h4 class="text-xl font-bold mb-3 text-slate-900 dark:text-white">Ako to funguje?</h4>
+                        <p class="text-slate-600 dark:text-slate-300 leading-relaxed text-sm">Gimme generuje žiadosť podľa oficiálneho štandardu Payme.sk. Tento štandard podporujú všetky majoritné banky na Slovensku (Tatra banka, VÚB, SLSP, ČSOB a ďalšie).</p>
+                    </div>
+                </div>
+
+                <!-- Feature 2: Safe Space (Colored, Visual) -->
+                <div class="reveal feature-card bg-gradient-to-br from-emerald-500 to-teal-600 rounded-[2rem] p-8 flex flex-col justify-between relative overflow-hidden text-white group">
+                    <button class="info-btn info-btn-white" onclick="toggleDetails(this)" aria-label="Viac info">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                    </button>
+                    
+                    <!-- Main Icon -->
+                   <div class="pointer-events-none relative z-10">
+    <h3 class="text-xl font-bold mb-2">Safe Space</h3>
+    <p class="text-sm text-emerald-100">
+        Tvoje dáta nejdú na žiadny cloud. Máš ich v telefóne a tam aj ostanú.
+    </p>
+</div>
+
+                    <!-- Background Decor (Giant Shield/Lock) -->
+                    <div class="absolute -bottom-4 -right-4 text-white/10 transform rotate-12 group-hover:scale-110 transition-transform duration-500">
+                         <svg class="w-40 h-40" fill="currentColor" viewBox="0 0 24 24">
+                             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                         </svg>
+                    </div>
+
+                    <!-- Sheet (Dark themed) -->
+                    <div class="info-sheet" style="background-color: #064e3b; color: white;">
+                        <h4 class="text-lg font-bold mb-2">Lokálne úložisko</h4>
+                        <p class="text-emerald-100 leading-relaxed text-xs">Aplikácia nekomunikuje so žiadnym backendom, nepoužíva externú databázu a nevyžaduje používateľské konto. Dáta zostávajú fyzicky uložené len v zariadení používateľa.</p>
+                    </div>
+                </div>
+
+                <!-- Feature 3: AI (Tall) -->
+                <div class="reveal feature-card md:row-span-2 bg-slate-50 dark:bg-[#151516] rounded-[2rem] p-8 overflow-hidden relative group border border-slate-100 dark:border-white/5">
+                    <button class="info-btn" onclick="toggleDetails(this)" aria-label="Viac info">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                    </button>
+                    <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-transparent to-rose-50 dark:to-rose-900/10 pointer-events-none"></div>
+                    <div class="relative z-10 pointer-events-none">
+                        <div class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400 text-[10px] font-bold uppercase tracking-wider mb-4">Powered by Gemini</div>
+                        <h3 class="text-2xl font-bold mb-2 dark:text-white">Matiku nechaj strojom.</h3>
+                        <p class="text-slate-500 dark:text-slate-400 mb-6">Odfoť účtenku, skontroluj sumu, inkasuj. </p>
+                        
+                        <!-- Simulated Receipt -->
+                        <div class="bg-white dark:bg-black rounded-xl p-4 shadow-lg transform group-hover:-translate-y-2 transition-transform duration-500 border border-slate-100 dark:border-slate-800">
+                            <div class="flex justify-between items-center mb-2"><div class="h-2 w-12 bg-slate-200 dark:bg-slate-700 rounded-full"></div><div class="h-2 w-8 bg-slate-200 dark:bg-slate-700 rounded-full"></div></div>
+                            <div class="flex justify-between items-center mb-4"><div class="h-2 w-16 bg-slate-200 dark:bg-slate-700 rounded-full"></div><div class="h-2 w-6 bg-slate-200 dark:bg-slate-700 rounded-full"></div></div>
+                            <div class="flex justify-between items-center pt-2 border-t border-dashed border-slate-200 dark:border-slate-800">
+                                <div class="text-xs font-bold text-slate-400">Spolu</div>
+                                <div class="text-lg font-bold text-rose-500">14.20€</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sheet -->
+                    <div class="info-sheet">
+                        <h4 class="text-xl font-bold mb-3 text-slate-900 dark:text-white">AI Skenovanie</h4>
+                        <p class="text-slate-600 dark:text-slate-300 leading-relaxed text-sm">Po nahratí obrázka účtenky je obsah analyzovaný pomocou multimodálneho jazykového modelu (Google Gemini),
+Výstupom je extrahovaná suma a návrh popisu platby.</p>
+                    </div>
+                </div>
+
+                <!-- Feature 4: Nostr (Wide) -->
+                <div class="reveal feature-card md:col-span-2 bg-[#4f46e5] rounded-[2rem] p-8 md:p-10 relative overflow-hidden text-white group">
+                    <button class="info-btn info-btn-white" onclick="toggleDetails(this)" aria-label="Viac info">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                    </button>
+                    <div class="relative z-10 flex flex-col h-full justify-between pointer-events-none">
+                        <div>
+                            <h3 class="text-2xl font-bold mb-2">Gimme tvoj link.</h3>
+                            <p class="text-white/80 max-w-md">Využi posielanie šifrovaných platobných žiadostí priamo priateľom.</p>
+                        </div>
+                        <div class="mt-8 flex items-center gap-3">
+                             <div class="flex -space-x-2">
+                                <div class="w-8 h-8 rounded-full border-2 border-[#4f46e5] bg-white/20"></div>
+                                <div class="w-8 h-8 rounded-full border-2 border-[#4f46e5] bg-white/20"></div>
+                                <div class="w-8 h-8 rounded-full border-2 border-[#4f46e5] bg-white/20"></div>
+                             </div>
+                             <span class="text-sm font-medium text-white/90">Split Bill funkcia</span>
+                        </div>
+                    </div>
+                    <div class="absolute top-1/2 right-[-20px] -translate-y-1/2 w-48 h-48 border-4 border-white/10 rounded-full group-hover:scale-110 transition-transform duration-700"></div>
+                    <div class="absolute top-1/2 right-[-20px] -translate-y-1/2 w-32 h-32 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-700 delay-75">
+                        <svg class="w-12 h-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    </div>
+
+                    <!-- Sheet (Dark themed) -->
+                    <div class="info-sheet" style="background-color: #3730a3; color: white;">
+                        <h4 class="text-xl font-bold mb-3">Decentralizované správy</h4>
+                        <p class="text-indigo-100 leading-relaxed text-sm">Aplikácia využíva protokol Nostr na odosielanie platobných požiadaviek medzi používateľmi. Správy sú odosielané ako šifrované udalosti podľa NIP-04.
+Obsah správ nie je čitateľný pre tretie strany.</p>
+                    </div>
+                </div>
+
+                <!-- Feature 5: History -->
+                <div class="reveal feature-card bg-slate-50 dark:bg-[#151516] rounded-[2rem] p-8 border border-slate-100 dark:border-white/5 relative overflow-hidden">
+                     <button class="info-btn" onclick="toggleDetails(this)" aria-label="Viac info">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                    </button>
+                     <div class="pointer-events-none">
+                        <h3 class="text-xl font-bold mb-2 dark:text-white">Audit log.</h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Maj vo financiách poriadok, aj keď riešiš len pizzu.
+</p>
+                        <div class="space-y-2">
+                            <div class="flex items-center gap-3 p-2 rounded-lg bg-white dark:bg-black/40 border border-slate-100 dark:border-white/5">
+                                <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                                <div class="h-1.5 w-16 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
+                            </div>
+                            <div class="flex items-center gap-3 p-2 rounded-lg bg-white dark:bg-black/40 border border-slate-100 dark:border-white/5 opacity-60">
+                                <div class="w-2 h-2 rounded-full bg-orange-400"></div>
+                                <div class="h-1.5 w-12 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
+                            </div>
+                        </div>
+                     </div>
+
+                     <!-- Sheet -->
+                     <div class="info-sheet">
+                         <h4 class="text-lg font-bold mb-2 text-slate-900 dark:text-white">Analytika</h4>
+                         <p class="text-slate-600 dark:text-slate-300 leading-relaxed text-xs">Sledujte, kto vám zaplatil a kto ešte dlží. Aplikácia poskytuje prehľadné grafy a históriu všetkých vygenerovaných QR kódov. Položky môžete označiť ako zaplatené alebo ich jedným klikom duplikovať pre novú platbu.</p>
+                     </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-12 border-t border-slate-200 dark:border-slate-800 bg-[#fbfbfd] dark:bg-[#000000]">
+        <div class="max-w-[1000px] mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="flex items-center gap-2">
+                <div class="w-6 h-6 bg-black dark:bg-white text-white dark:text-black rounded-md flex items-center justify-center"><svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg></div>
+                <span class="font-bold text-sm tracking-tight dark:text-white">Gimme</span>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-500">Lokálna aplikácia. Žiadne trackery. <br class="md:hidden">Vytvorené s ❤️ pre Slovensko.</p>
+            <div class="flex gap-6 text-xs font-medium text-slate-500 dark:text-slate-400">
+                <a href="#" class="hover:text-black dark:hover:text-white transition-colors">GitHub</a>
+                <a href="#" class="hover:text-black dark:hover:text-white transition-colors">Privacy</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Scroll Reveal
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) entry.target.classList.add('active');
+                });
+            }, { threshold: 0.15, rootMargin: "0px 0px -50px 0px" });
+            document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+            // Bottom Dock
+            const dock = document.getElementById('bottom-dock');
+            const heroBtn = document.getElementById('hero-cta');
+            if (dock && heroBtn) {
+                const navObserver = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            dock.classList.remove('dock-visible');
+                            dock.classList.add('dock-hidden');
+                        } else if (window.scrollY > 100) {
+                            dock.classList.remove('dock-hidden');
+                            dock.classList.add('dock-visible');
+                        }
+                    });
+                }, { threshold: 0 });
+                navObserver.observe(heroBtn);
+            }
+
+            // Dark Mode
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.classList.add('dark');
+            }
+        });
+
+        // Toggle Info Sheets
+        function toggleDetails(btn) {
+            const card = btn.closest('.feature-card');
+            // Auto-close others
+            document.querySelectorAll('.feature-card.details-open').forEach(c => {
+                if (c !== card) c.classList.remove('details-open');
+            });
+            card.classList.toggle('details-open');
+        }
+    </script>
+</body>
+</html>
