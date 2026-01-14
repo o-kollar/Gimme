@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gimme - Platby. Jednoducho.</title>
-    <meta name="description" content="Najjednoduchší spôsob ako vytvárať Payme QR kódy.">
+    <title>Gimme - Platby Jednoducho.</title>
+    <meta name="description" content="Gimme tvoj link.">
     
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" href="app/favicon/favicon-32x32.png">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -212,9 +212,7 @@
     <!-- Header -->
     <header class="absolute top-0 left-0 right-0 z-40 px-6 py-6 flex justify-center">
         <div class="flex items-center gap-2 opacity-50 hover:opacity-100 transition-opacity cursor-pointer" onclick="window.scrollTo(0,0)">
-            <div class="w-6 h-6 bg-black dark:bg-white text-white dark:text-black rounded-md flex items-center justify-center shadow-md">
-               <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-            </div>
+            <img src="app/favicon/favicon-32x32.png" alt="Gimme" class="w-6 h-6 rounded-md shadow-md">
             <span class="font-bold text-sm tracking-tight dark:text-white">Gimme</span>
         </div>
     </header>
@@ -223,16 +221,14 @@
     <div id="bottom-dock" class="fixed bottom-8 left-0 right-0 z-50 flex justify-center px-4 dock-hidden pointer-events-none">
         <div class="glass rounded-full p-2 pr-2 pl-4 shadow-2xl flex items-center gap-4 pointer-events-auto transform transition-transform hover:scale-[1.02]">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-black dark:bg-white text-white dark:text-black rounded-full flex items-center justify-center shadow-md">
-                   <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                </div>
+                <img src="app/favicon/favicon-32x32.png" alt="Gimme" class="w-10 h-10 rounded-lg shadow-md">
                 <div class="hidden sm:block">
                     <p class="text-xs font-bold text-slate-900 dark:text-white leading-none">Gimme</p>
                     <p class="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Platby jednoducho</p>
                 </div>
             </div>
             <div class="w-px h-8 bg-slate-200 dark:bg-slate-700/50 hidden sm:block"></div>
-            <a href="./app/" class="bg-[#0071e3] hover:bg-[#0077ED] text-white text-sm font-bold px-6 py-3 rounded-full transition-all active:scale-95 shadow-lg shadow-blue-500/20 flex items-center gap-2">
+            <a href="./app/" class="bg-[#c4c404] hover:bg-[#0077ED] text-black text-sm font-bold px-6 py-3 rounded-full transition-all active:scale-95 shadow-lg shadow-blue-500/20 flex items-center gap-2">
                 <span>Otvoriť aplikáciu</span>
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
             </a>
@@ -241,11 +237,11 @@
 
     <!-- Hero -->
     <section class="relative pt-40 pb-20 lg:pt-52 lg:pb-32 px-6">
-        <div class="max-w-[1200px] mx-auto text-center flex flex-col items-center">
-            <div class="reveal">
-                <h1 class="text-6xl md:text-8xl font-bold tracking-tighter mb-6 text-gradient leading-[1.1]">Platby.<br>Jednoducho.</h1>
-                <p class="text-xl md:text-2xl text-slate-500 dark:text-slate-400 max-w-2xl mx-auto font-medium leading-relaxed mb-12">Bez registrácie, bez poplatkov, priamo v prehliadači.</p>
-                <div class="flex justify-center mb-20">
+        <div class="max-w-[1200px] mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
+            <div class="reveal flex-1 text-center lg:text-left">
+                <h1 class="text-6xl md:text-8xl font-bold tracking-tighter mb-6 text-gradient leading-[1.1]">Platby.<br>Jednoducho,</h1>
+                <p class="text-xl md:text-2xl text-slate-500 dark:text-slate-400 max-w-2xl lg:max-w-none mx-auto lg:mx-0 font-medium leading-relaxed mb-12">bez registrácie, bez poplatkov, priamo v prehliadači.</p>
+                <div class="flex justify-center lg:justify-start mb-12 lg:mb-0">
                     <a id="hero-cta" href="./app/" class="group relative px-10 py-5 bg-slate-900 dark:bg-white text-white dark:text-black rounded-full font-bold text-xl transition-all hover:scale-105 active:scale-95 shadow-2xl shadow-slate-500/20">
                         Spustiť Aplikáciu
                         <span class="absolute inset-0 rounded-full ring-4 ring-white/10 dark:ring-black/5 group-hover:ring-8 transition-all duration-300"></span>
@@ -254,7 +250,7 @@
             </div>
 
             <!-- Phone -->
-            <div class="reveal relative z-10 w-full max-w-[320px] md:max-w-[360px] animate-float">
+            <div class="reveal relative z-10 w-full max-w-[320px] md:max-w-[360px] lg:flex-shrink-0 animate-float">
                 <div class="phone-mockup aspect-[9/19]">
     <div class="phone-notch"></div>
 
@@ -463,10 +459,6 @@ Obsah správ nie je čitateľný pre tretie strany.</p>
     <footer class="py-12 border-t border-slate-200 dark:border-slate-800 bg-[#fbfbfd] dark:bg-[#000000]">
         <div class="max-w-[1000px] mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
             <div class="flex items-center gap-2">
-                <div class="w-6 h-6 bg-black dark:bg-white text-white dark:text-black rounded-md flex items-center justify-center"><svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg></div>
-                <span class="font-bold text-sm tracking-tight dark:text-white">Gimme</span>
-            </div>
-            <p class="text-xs text-slate-500 dark:text-slate-500">Lokálna aplikácia. Žiadne trackery. <br class="md:hidden">Vytvorené s ❤️ pre Slovensko.</p>
             <div class="flex gap-6 text-xs font-medium text-slate-500 dark:text-slate-400">
                 <a href="#" class="hover:text-black dark:hover:text-white transition-colors">GitHub</a>
                 <a href="#" class="hover:text-black dark:hover:text-white transition-colors">Privacy</a>
