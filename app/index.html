@@ -6,6 +6,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Gimme</title>
   
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#6366f1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Gimme">
+  
   <!-- Favicon -->
   <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png">
@@ -480,49 +486,21 @@
       font-weight: 600;
       color: rgb(var(--accent-700));
       letter-spacing: 0.02em;
-      display: flex;
-      align-items: flex-end;
+      animation: text-pulse 2s ease-in-out infinite;
     }
 
     .dark .app-loader .loading-text {
       color: rgb(var(--accent-300));
     }
 
-    .app-loader .loading-dots {
-      display: inline-flex;
-      margin-left: 4px;
-      margin-bottom: 6px;
-    }
-
-    .app-loader .loading-dots span {
-      width: 6px;
-      height: 6px;
-      margin: 0 2px;
-      background: rgb(var(--accent-500));
-      border-radius: 50%;
-      animation: dot-pulse 1.4s ease-in-out infinite;
-    }
-
-    .app-loader .loading-dots span:nth-child(1) {
-      animation-delay: 0s;
-    }
-
-    .app-loader .loading-dots span:nth-child(2) {
-      animation-delay: 0.2s;
-    }
-
-    .app-loader .loading-dots span:nth-child(3) {
-      animation-delay: 0.4s;
-    }
-
-    @keyframes dot-pulse {
-      0%, 60%, 100% {
-        opacity: 0.3;
-        transform: scale(0.8);
+    @keyframes text-pulse {
+      0%, 100% {
+        opacity: 0.6;
+        transform: scale(0.98);
       }
-      30% {
+      50% {
         opacity: 1;
-        transform: scale(1.2);
+        transform: scale(1.02);
       }
     }
 
@@ -594,7 +572,7 @@
       
       <!-- Glass card with spinner -->
       <div>
-        <p class="loading-text">Načítavam<span class="loading-dots"><span></span><span></span><span></span></span></p>
+        <p class="loading-text">Načítavam</p>
       </div>
     </div>
 
