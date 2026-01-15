@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Gimme - Offline</title>
+  
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#6366f1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Gimme">
+  
+  <!-- Favicon -->
+  <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png">
+  <link rel="manifest" href="favicon/site.webmanifest">
+  
+  <style>
+    /* System Fonts */
+    html {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    /* Accent Color Variables - Default: Indigo */
+    :root {
+      --accent-300: 165 180 252;
+      --accent-400: 129 140 248;
+      --accent-600: 79 70 229;
+      --accent-700: 67 56 202;
+    }
+    
+    /* Main loader container */
+    .app-loader {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5rem;
+      background: linear-gradient(135deg, rgba(248, 250, 252, 0.9) 0%, rgba(241, 245, 249, 0.95) 100%);
+      overflow: hidden;
+    }
+
+    .dark .app-loader {
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.9) 100%);
+    }
+
+    /* Animated floating shapes */
+    .app-loader .shape {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(40px);
+      opacity: 0.6;
+    }
+
+    .app-loader .shape-1 {
+      width: 320px;
+      height: 320px;
+      background: linear-gradient(135deg, #818cf8, #c084fc);
+      top: 5%;
+      left: 5%;
+      animation: float-1 8s ease-in-out infinite;
+    }
+
+    .app-loader .shape-2 {
+      width: 280px;
+      height: 280px;
+      background: linear-gradient(135deg, #f472b6, #fb7185);
+      top: 55%;
+      right: 5%;
+      animation: float-2 10s ease-in-out infinite;
+    }
+
+    .app-loader .shape-3 {
+      width: 240px;
+      height: 240px;
+      background: linear-gradient(135deg, #34d399, #2dd4bf);
+      bottom: 15%;
+      left: 15%;
+      animation: float-3 7s ease-in-out infinite;
+    }
+
+    .app-loader .shape-4 {
+      width: 200px;
+      height: 200px;
+      background: linear-gradient(135deg, #fbbf24, #fb923c);
+      top: 25%;
+      right: 20%;
+      animation: float-4 9s ease-in-out infinite;
+    }
+
+    .app-loader .shape-5 {
+      width: 180px;
+      height: 180px;
+      background: linear-gradient(135deg, #60a5fa, #818cf8);
+      bottom: 10%;
+      right: 30%;
+      animation: float-5 11s ease-in-out infinite;
+    }
+
+    .app-loader .shape-6 {
+      width: 150px;
+      height: 150px;
+      background: linear-gradient(135deg, #a78bfa, #f472b6);
+      top: 45%;
+      left: 5%;
+      animation: float-6 12s ease-in-out infinite;
+    }
+
+    @keyframes float-1 {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      25% { transform: translate(30px, 40px) scale(1.1); }
+      50% { transform: translate(-20px, 60px) scale(0.95); }
+      75% { transform: translate(40px, -20px) scale(1.05); }
+    }
+
+    @keyframes float-2 {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      25% { transform: translate(-40px, -30px) scale(1.15); }
+      50% { transform: translate(30px, -50px) scale(0.9); }
+      75% { transform: translate(-20px, 30px) scale(1.1); }
+    }
+
+    @keyframes float-3 {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(50px, -40px) scale(1.2); }
+      66% { transform: translate(-30px, -20px) scale(0.85); }
+    }
+
+    @keyframes float-4 {
+      0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); }
+      50% { transform: translate(-30px, 50px) scale(1.1) rotate(180deg); }
+    }
+
+    @keyframes float-5 {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      25% { transform: translate(40px, -50px) scale(1.15); }
+      50% { transform: translate(-25px, -30px) scale(0.95); }
+      75% { transform: translate(35px, 40px) scale(1.1); }
+    }
+
+    @keyframes float-6 {
+      0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); }
+      33% { transform: translate(45px, 30px) scale(1.2) rotate(60deg); }
+      66% { transform: translate(-35px, 50px) scale(0.9) rotate(-30deg); }
+    }
+
+    /* Glass card container */
+    .glass-card {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.25rem;
+      padding: 2.5rem 3rem;
+      background: rgba(255, 255, 255, 0.25);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      max-width: 320px;
+      margin: 0 1rem;
+    }
+
+    .dark .glass-card {
+      background: rgba(30, 41, 59, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Offline icon */
+    .offline-icon {
+      width: 56px;
+      height: 56px;
+      color: rgb(var(--accent-600));
+    }
+
+    .dark .offline-icon {
+      color: rgb(var(--accent-400));
+    }
+
+    .loading-text {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: rgb(var(--accent-700));
+      letter-spacing: 0.02em;
+    }
+
+    .dark .loading-text {
+      color: rgb(var(--accent-300));
+    }
+
+    .description {
+      font-size: 0.9rem;
+      color: rgba(71, 85, 105, 0.9);
+      line-height: 1.5;
+      margin-top: -0.5rem;
+    }
+
+    .dark .description {
+      color: rgba(203, 213, 225, 0.8);
+    }
+
+    /* Retry button */
+    .retry-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.875rem 1.75rem;
+      background: rgb(var(--accent-600));
+      color: white;
+      font-size: 1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 14px rgba(var(--accent-600), 0.35);
+      margin-top: 0.5rem;
+    }
+
+    .retry-button:hover {
+      background: rgb(var(--accent-700));
+      transform: scale(1.02);
+    }
+
+    .retry-button:active {
+      transform: scale(0.98);
+    }
+
+    .retry-button svg {
+      width: 20px;
+      height: 20px;
+    }
+  </style>
+  
+  <script>
+    // Check for saved dark mode preference
+    if (localStorage.getItem('darkMode') === 'true' || 
+        (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    }
+  </script>
+</head>
+<body>
+  <div class="app-loader">
+    <!-- Animated floating shapes -->
+    <div class="shape shape-1"></div>
+    <div class="shape shape-2"></div>
+    <div class="shape shape-3"></div>
+    <div class="shape shape-4"></div>
+    <div class="shape shape-5"></div>
+    <div class="shape shape-6"></div>
+    
+    <!-- Glass card with content -->
+    <div class="">
+      <!-- Offline Icon -->
+      
+      <p class="loading-text">Ste offline</p>
+      <p class="description">Skontrolujte internetové pripojenie a skúste znova.</p>
+      
+      <button onclick="window.location.reload()" class="retry-button">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+        </svg>
+        Skúsiť znova
+      </button>
+    </div>
+  </div>
+</body>
+</html>

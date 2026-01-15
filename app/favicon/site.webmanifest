@@ -1,0 +1,86 @@
+{
+  "name": "Gimme - Payment QR Generator",
+  "short_name": "Gimme",
+  "description": "Modern Slovak payment QR code generator with Nostr integration, AI receipt scanning, and analytics",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#6366f1",
+  "background_color": "#fbfbfd",
+  "lang": "sk",
+  "icons": [
+    {
+      "src": "favicon/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "favicon/android-chrome-512x512.png",
+      "sizes": "512x512", 
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "favicon/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "favicon/favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "favicon/favicon-16x16.png", 
+      "sizes": "16x16",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["finance", "business", "utilities"],
+  "screenshots": [
+    {
+      "src": "favicon/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Gimme Payment Generator - Main interface"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Quick Payment",
+      "short_name": "Pay",
+      "description": "Generate a payment QR code quickly",
+      "url": "/?action=quick-payment",
+      "icons": [
+        {
+          "src": "favicon/android-chrome-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Scan Receipt",
+      "short_name": "Scan", 
+      "description": "Scan receipt with AI",
+      "url": "/?action=scan-receipt",
+      "icons": [
+        {
+          "src": "favicon/android-chrome-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
+  "prefer_related_applications": false,
+  "edge_side_panel": {
+    "preferred_width": 400
+  }
+}
