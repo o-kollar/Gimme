@@ -280,7 +280,9 @@
         <!-- Bottom buttons -->
         <div class="flex gap-3 mt-auto mb-2">
             <div class="w-14 h-14 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-lg"></div>
-            <div class="flex-1 h-14 rounded-full bg-gradient-to-r from-indigo-500 to-indigo-600 shadow-lg shadow-indigo-500/20"></div>
+            <div class="flex-1 h-14 rounded-full bg-slate-100 dark:bg-slate-800 border-2 border-indigo-600 dark:border-indigo-500 shadow-xl flex items-center justify-center">
+            
+            </div>
         </div>
 
     </div>
@@ -449,6 +451,35 @@ Obsah správ nie je čitateľný pre tretie strany.</p>
                          <h4 class="text-lg font-bold mb-2 text-slate-900 dark:text-white">Analytika</h4>
                          <p class="text-slate-600 dark:text-slate-300 leading-relaxed text-xs">Sledujte, kto vám zaplatil a kto ešte dlží. Aplikácia poskytuje prehľadné grafy a históriu všetkých vygenerovaných QR kódov. Položky môžete označiť ako zaplatené alebo ich jedným klikom duplikovať pre novú platbu.</p>
                      </div>
+                </div>
+
+                <!-- Feature 6: PWA -->
+                <div class="reveal feature-card bg-gradient-to-br from-orange-500 to-pink-600 rounded-[2rem] p-8 flex flex-col justify-between relative overflow-hidden text-white group">
+                    <button class="info-btn info-btn-white" onclick="toggleDetails(this)" aria-label="Viac info">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                    </button>
+                    
+                    <!-- Main Content -->
+                    <div class="pointer-events-none relative z-10">
+                        <div class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-white/20 text-white text-[10px] font-bold uppercase tracking-wider mb-4">PWA</div>
+                        <h3 class="text-xl font-bold mb-2">Nainštaluj si to.</h3>
+                        <p class="text-sm text-orange-100">
+                            Funguje offline, ako natívna aplikácia. Priamo na tvojej ploche.
+                        </p>
+                    </div>
+
+                    <!-- Background Decor (Phone + Download Icon) -->
+                    <div class="absolute -bottom-4 -right-4 text-white/10 transform rotate-12 group-hover:scale-110 transition-transform duration-500">
+                        <svg class="w-40 h-40" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 18l-6-6h4V4h4v8h4l-6 6zM4 20v2h16v-2H4z"/>
+                        </svg>
+                    </div>
+
+                    <!-- Sheet (Dark themed) -->
+                    <div class="info-sheet" style="background-color: #9a3412; color: white;">
+                        <h4 class="text-lg font-bold mb-2">Progressive Web App</h4>
+                        <p class="text-orange-100 leading-relaxed text-xs">Gimme je plnohodnotná PWA – môžeš si ju nainštalovať na plochu telefónu alebo počítača. Funguje aj bez internetu, načítava sa bleskovo a správa sa ako natívna aplikácia.</p>
+                    </div>
                 </div>
 
             </div>
