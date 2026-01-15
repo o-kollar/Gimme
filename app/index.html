@@ -11,6 +11,10 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Gimme">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="msapplication-TileColor" content="#6366f1">
+  <meta name="msapplication-tap-highlight" content="no">
+  <meta name="format-detection" content="telephone=no">
   
   <!-- Favicon -->
   <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png">
@@ -552,6 +556,66 @@
         opacity: 1;
       }
     }
+
+    /* PWA-specific styles */
+    @media (display-mode: standalone) {
+      /* Remove system UI chrome when installed as PWA */
+      body {
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+      }
+      
+      /* Prevent overscroll bounce in PWA */
+      html, body {
+        overscroll-behavior-y: contain;
+      }
+      
+      /* Optimize for mobile PWA */
+      .app-container {
+        max-height: 100vh;
+        overflow: hidden;
+      }
+    }
+
+    /* iOS PWA status bar handling */
+    @supports (-webkit-touch-callout: none) {
+      .ios-status-bar-padding {
+        padding-top: env(safe-area-inset-top);
+      }
+    }
+
+    /* Enhanced touch targets for mobile */
+    @media (hover: none) and (pointer: coarse) {
+      button, [role="button"] {
+        min-height: 44px;
+        min-width: 44px;
+      }
+    }
+
+    /* Prevent zoom on input focus in iOS Safari */
+    @media screen and (max-width: 768px) {
+      input, select, textarea {
+        font-size: 16px !important;
+      }
+    }
+
+    /* PWA app icon bounce animation for install prompt */
+    @keyframes app-icon-bounce {
+      0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+      }
+      40% {
+        transform: translateY(-10px);
+      }
+      60% {
+        transform: translateY(-5px);
+      }
+    }
+
+    .app-icon-bounce {
+      animation: app-icon-bounce 2s infinite;
+    }
   </style>
 </head>
 
@@ -686,17 +750,37 @@
             <p class="text-xs text-slate-500 mb-2">Vyberte príjemcov z adresára (môžete vybrať viacerých pre rozdelenie účtu).</p>
 
             <!-- Split Bill Indicator -->
-            <div v-if="selectedContacts.length > 1" class="mb-3 px-3 py-2 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-xl flex flex-col gap-1">
-              <div class="flex items-center gap-2">
-                <svg class="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-                <span class="text-xs font-medium text-amber-700 dark:text-amber-300">Rozdelenie účtu medzi {{ selectedContacts.length }} kontaktov</span>
+            <div v-if="selectedContacts.length > 1" class="mb-3 px-3 py-2 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-xl flex flex-col gap-2">
+              <!-- Toggle Switch for Split Bill -->
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <svg class="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  <span class="text-xs font-medium text-amber-700 dark:text-amber-300">Rozdeliť účet</span>
+                </div>
+                <button @click="splitBillEnabled = !splitBillEnabled" 
+                  class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none"
+                  :class="splitBillEnabled ? 'bg-amber-500' : 'bg-slate-300 dark:bg-slate-600'">
+                  <span class="inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow-sm transition-transform"
+                    :class="splitBillEnabled ? 'translate-x-4' : 'translate-x-1'"></span>
+                </button>
               </div>
+              <!-- Amount Display -->
               <div v-if="payment.amount" class="flex items-center gap-2 pl-6">
-                <span class="text-xs font-bold text-amber-800 dark:text-amber-200">{{ (payment.amount / selectedContacts.length).toFixed(2) }} € na osobu</span>
-                <span class="text-[10px] text-amber-600 dark:text-amber-400">(celkom {{ payment.amount }} €)</span>
+                <template v-if="splitBillEnabled">
+                  <span class="text-xs font-bold text-amber-800 dark:text-amber-200">{{ (payment.amount / selectedContacts.length).toFixed(2) }} € na osobu</span>
+                  <span class="text-[10px] text-amber-600 dark:text-amber-400">(celkom {{ payment.amount }} €)</span>
+                </template>
+                <template v-else>
+                  <span class="text-xs font-bold text-amber-800 dark:text-amber-200">{{ payment.amount }} € každému</span>
+                  <span class="text-[10px] text-amber-600 dark:text-amber-400">({{ selectedContacts.length }}× rovnaká suma)</span>
+                </template>
               </div>
+              <!-- Mode Description -->
+              <p class="text-[10px] text-amber-600 dark:text-amber-400 pl-6">
+                {{ splitBillEnabled ? 'Suma bude rozdelená rovnomerne medzi ' + selectedContacts.length + ' kontaktov' : 'Každý kontakt dostane požiadavku na plnú sumu' }}
+              </p>
             </div>
 
             <div class="mb-4 flex-1 min-h-0 flex flex-col">
@@ -869,7 +953,7 @@
         <div class="flex items-center gap-2">
           <button ref="settingsBtn"
             @click="showSettings = !showSettings; showHistory = false; showTemplates = false; isQrVisible = false"
-            class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center justify-center"
             :class="[showSettings ? 'bg-accent-100 dark:bg-accent-900 text-accent-600 dark:text-accent-400' : 'text-slate-400 dark:text-slate-500', showTutorial && tutorialStep === 7 ? 'tutorial-highlight-button' : '']">
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -882,7 +966,7 @@
         <div class="flex items-center gap-2">
           <button ref="templatesBtn"
             @click="showTemplates = !showTemplates; showHistory = false; showSettings = false; isQrVisible = false"
-            class="relative p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            class="relative p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center justify-center"
             :class="[showTemplates ? 'bg-emerald-100 dark:bg-emerald-900 text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500', showTutorial && tutorialStep === 5 ? 'tutorial-highlight-button' : '']">
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -891,7 +975,7 @@
           </button>
           <button ref="historyBtn"
             @click="showHistory = !showHistory; showTemplates = false; showSettings = false; isQrVisible = false"
-            class="relative p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            class="relative p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center justify-center"
             :class="[showHistory ? 'bg-accent-100 dark:bg-accent-900 text-accent-600 dark:text-accent-400' : 'text-slate-400 dark:text-slate-500', showTutorial && tutorialStep === 6 ? 'tutorial-highlight-button' : '']">
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -1235,8 +1319,8 @@
           class="absolute inset-0 w-full h-full bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 flex flex-col shadow-2xl transition-all duration-500 ease-spring overflow-hidden"
           :class="showHistory ? 'opacity-100 scale-100 z-30 translate-y-0' : 'opacity-0 scale-95 pointer-events-none translate-y-4'">
           <!-- Analytics Summary -->
-          <div class="p-4 bg-gradient-to-br from-indigo-600 to-violet-700 text-white flex-shrink-0">
-            <div class="flex justify-between items-center mb-4">
+          <div class="p-3 bg-gradient-to-br from-indigo-600 to-violet-700 text-white flex-shrink-0">
+            <div class="flex justify-between items-center mb-2">
               <button @click="showHistory = false"
                 class="flex items-center gap-1 text-sm font-bold text-indigo-200 hover:text-white transition-colors">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1245,39 +1329,50 @@
                 <span>Späť</span>
               </button>
               <h3 class="text-sm font-bold uppercase tracking-wider text-indigo-200">Prehľad</h3>
-              <!-- Date Range Selector -->
-              <select v-model="analyticsDateRange"
-                class="bg-white/20 border-0 rounded-lg px-2 py-1 text-xs font-bold text-white outline-none cursor-pointer">
-                <option value="all" class="text-slate-800">Všetko</option>
-                <option value="today" class="text-slate-800">Dnes</option>
-                <option value="week" class="text-slate-800">Tento týždeň</option>
-                <option value="month" class="text-slate-800">Tento mesiac</option>
-                <option value="year" class="text-slate-800">Tento rok</option>
-                <option value="custom" class="text-slate-800">Vlastné...</option>
-              </select>
             </div>
 
-            <!-- Custom Date Range -->
-            <div v-if="analyticsDateRange === 'custom'" class="mb-4 flex gap-2">
-              <input type="date" v-model="customDateFrom"
-                class="flex-1 bg-white/20 border-0 rounded-lg px-3 py-2 text-sm text-white outline-none">
-              <input type="date" v-model="customDateTo"
-                class="flex-1 bg-white/20 border-0 rounded-lg px-3 py-2 text-sm text-white outline-none">
-            </div>
-
-            <div class="grid grid-cols-2 gap-4">
-              <div class="text-center">
-                <p class="text-2xl font-extrabold">{{ filteredAnalytics.totalCount }}</p>
-                <p class="text-[10px] uppercase tracking-wider text-indigo-200">Platieb</p>
+            <!-- Stats + Slider Row -->
+            <div class="flex items-center gap-4">
+              <!-- Compact Slider -->
+              <div class="flex-1 min-w-0">
+                <input type="range" 
+                  :value="dateRangeOptions.indexOf(analyticsDateRange === 'custom' ? 'month' : analyticsDateRange)"
+                  @input="analyticsDateRange = dateRangeOptions[$event.target.value]"
+                  min="0" 
+                  :max="dateRangeOptions.length - 1" 
+                  step="1"
+                  class="w-full h-1.5 bg-white/20 rounded-full appearance-none cursor-pointer
+                    [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 
+                    [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:shadow-lg
+                    [&::-webkit-slider-thumb]:cursor-pointer
+                    [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full 
+                    [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:cursor-pointer">
+                <div class="flex justify-between mt-0.5">
+                  <span v-for="(opt, idx) in dateRangeOptions" :key="opt" 
+                    class="text-[7px] text-indigo-200/60 cursor-pointer hover:text-white transition-colors"
+                    :class="{ 'text-white font-bold': analyticsDateRange === opt }"
+                    @click="analyticsDateRange = opt">
+                    {{ dateRangeShortLabels[opt] }}
+                  </span>
+                </div>
               </div>
-              <div class="text-center">
-                <p class="text-2xl font-extrabold">{{ filteredAnalytics.totalAmount.toFixed(0) }}€</p>
-                <p class="text-[10px] uppercase tracking-wider text-indigo-200">Celkom</p>
+
+              <!-- Numbers -->
+              <div class="flex gap-4 flex-shrink-0">
+                <div class="text-center">
+                  <p class="text-xl font-extrabold">{{ filteredAnalytics.totalCount }}</p>
+                  <p class="text-[9px] uppercase tracking-wider text-indigo-200">Platieb</p>
+                </div>
+                <div class="text-center">
+                  <p class="text-xl font-extrabold">{{ filteredAnalytics.totalAmount.toFixed(0) }}€</p>
+                  <p class="text-[9px] uppercase tracking-wider text-indigo-200">Celkom</p>
+                </div>
               </div>
             </div>
+          </div>
 
-            <!-- Carousel Breakdown Metrics -->
-            <div class="mt-4 pt-4 border-t border-white/20 relative group">
+          <!-- Carousel Breakdown -->
+          <div class="bg-gradient-to-br from-indigo-700 to-violet-800 text-white px-3 py-2">
               <!-- Scrollable Area -->
               <div ref="analyticsCarousel" class="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide"
                 @scroll="onAnalyticsScroll">
@@ -1351,21 +1446,28 @@
               </div>
 
               <!-- Pagination Dots -->
-              <div class="flex justify-center gap-1.5 mt-3">
+              <div class="flex justify-center gap-1.5 mt-2">
                 <div v-for="i in 3" :key="i"
                   class="w-1.5 h-1.5 rounded-full transition-all duration-300"
                   :class="activeAnalyticsSlide === i-1 ? 'bg-white w-3' : 'bg-white/40'"></div>
               </div>
-            </div>
-
           </div>
 
           <!-- History List -->
           <div class="p-2 flex-1 min-h-0 overflow-hidden flex flex-col">
             <div class="flex justify-between items-center mb-3">
               <h3 class="text-sm font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">História</h3>
-              <button v-if="paymentHistory.length > 0" @click="clearHistory"
-                class="text-xs text-red-400 hover:text-red-600 dark:hover:text-red-300 font-bold uppercase">Vymazať</button>
+              <div class="flex items-center gap-3">
+                <button v-if="paymentHistory.length > 0" @click="exportHistoryCSV"
+                  class="text-xs text-accent-500 hover:text-accent-600 dark:hover:text-accent-400 font-bold uppercase flex items-center gap-1">
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  Export
+                </button>
+                <button v-if="paymentHistory.length > 0" @click="clearHistory"
+                  class="text-xs text-red-400 hover:text-red-600 dark:hover:text-red-300 font-bold uppercase">Vymazať</button>
+              </div>
             </div>
 
             <div v-if="paymentHistory.length === 0"
@@ -1800,8 +1902,7 @@
         <!-- Suma with Inline Calculator (wrapped for dropdown positioning) -->
         <div class="relative" :class="showTutorial && tutorialStep === 2 ? 'tutorial-highlight-input' : ''">
           <div
-            class="bg-white dark:bg-slate-800 rounded-[1.25rem] shadow-sm border border-slate-200 dark:border-slate-700 transition-all overflow-hidden"
-            :class="showCalculator ? 'border-accent-500 ring-2 ring-accent-500/20' : 'focus-within:border-accent-500 focus-within:ring-2 focus-within:ring-accent-500/20'">
+            class="bg-white dark:bg-slate-800 rounded-[1.25rem] shadow-sm border border-slate-200 dark:border-slate-700 transition-all overflow-hidden focus-within:border-accent-500 focus-within:ring-2 focus-within:ring-accent-500/20">
             <!-- Main Input Row (also serves as calculator display) -->
             <div class="h-16 px-5 flex flex-col justify-center">
               <!-- Expression display when calculator is active -->
@@ -1814,7 +1915,7 @@
                 <span v-if="showCalculator && calcDisplay"
                   class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">=</span>
               </div>
-              <div class="flex items-center">
+              <div class="flex items-center justify-center">
                 <!-- Show calculated result when calculator is active, otherwise show normal input -->
                 <input v-if="!showCalculator" type="number" step="0.01" v-model="payment.amount"
                   @focus="showAmountSuggestions = true" @blur="hideAmountSuggestions"
@@ -1825,7 +1926,7 @@
                   {{ calcResult !== null ? calcResult.toFixed(2) : '0.00' }}
                 </p>
                 <button @click.prevent="toggleCalculator" type="button" class="ml-2 p-1.5 rounded-lg transition-colors"
-                  :class="showCalculator ? 'text-white bg-accent-600 hover:bg-accent-700' : 'text-slate-400 dark:text-slate-500 hover:text-accent-600 dark:hover:text-accent-400 hover:bg-accent-50 dark:hover:bg-accent-900'">
+                  :class="showCalculator ? 'text-accent-600' : 'text-slate-400 dark:text-slate-500 hover:text-accent-600'">
                   <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
@@ -2058,6 +2159,7 @@
         const myNsec = computed(() => myPrivKey.value); // Expose nsec for copying
         const showNostrModal = ref(false);
         const selectedContacts = ref([]); // Array for multiple contact selection (split bill)
+        const splitBillEnabled = ref(true); // Toggle for splitting bill vs same amount to all
         const contactSearch = ref('');
         const isSendingNostr = ref(false);
         const connectedRelays = ref(0);
@@ -2328,6 +2430,24 @@
         const customDateFrom = ref('');
         const customDateTo = ref('');
         const activeAnalyticsSlide = ref(0);
+
+        // Slider options for date range
+        const dateRangeOptions = ['all', 'today', 'week', 'month', 'year'];
+        const dateRangeLabels = {
+          all: 'Všetko',
+          today: 'Dnes',
+          week: 'Tento týždeň',
+          month: 'Tento mesiac',
+          year: 'Tento rok',
+          custom: 'Vlastné obdobie'
+        };
+        const dateRangeShortLabels = {
+          all: 'Vše',
+          today: 'Dnes',
+          week: 'Týžd.',
+          month: 'Mes.',
+          year: 'Rok'
+        };
 
         const onAnalyticsScroll = () => {
           if (analyticsCarousel.value) {
@@ -2774,7 +2894,8 @@
 
           // Calculate amount per person when splitting between multiple contacts
           const totalContacts = selectedContacts.value.length;
-          const amountPerPerson = totalContacts > 1 
+          const shouldSplit = splitBillEnabled.value && totalContacts > 1;
+          const amountPerPerson = shouldSplit 
             ? parseFloat((payment.value.amount / totalContacts).toFixed(2)) 
             : payment.value.amount;
 
@@ -2793,7 +2914,7 @@
                 amount: amountPerPerson,
                 currency: "EUR",
                 url: url,
-                note: totalContacts > 1 
+                note: shouldSplit 
                   ? (payment.value.msg || "Gimme Request") + " (rozdelené: " + amountPerPerson + "€ z " + payment.value.amount + "€)"
                   : (payment.value.msg || "Gimme Request")
               });
@@ -2822,7 +2943,7 @@
                 recipientName: contact.name || profile.recipientName,
                 amount: amountPerPerson,
                 vs: payment.value.vs,
-                msg: totalContacts > 1 
+                msg: shouldSplit 
                   ? payment.value.msg + ' (Rozdelené: ' + amountPerPerson + '€ z ' + payment.value.amount + '€ pre ' + contact.name + ')'
                   : payment.value.msg + ' (Odoslané cez Nostr pre ' + contact.name + ')',
                 status: 'pending'
@@ -3361,6 +3482,72 @@
           await window.dbStorage.removeItem('payment_history');
         };
 
+        const exportHistoryCSV = () => {
+          if (paymentHistory.value.length === 0) return;
+
+          // CSV headers
+          const headers = ['Dátum', 'Čas', 'Účet', 'Príjemca', 'Suma', 'Mena', 'VS', 'Správa', 'Splatnosť', 'Stav'];
+
+          // Convert history items to CSV rows
+          const rows = paymentHistory.value.map(item => {
+            const date = new Date(item.timestamp);
+            const dateStr = date.toLocaleDateString('sk-SK');
+            const timeStr = date.toLocaleTimeString('sk-SK', { hour: '2-digit', minute: '2-digit' });
+            
+            // Determine status label
+            let statusLabel = 'Čakajúce';
+            if (item.status === 'paid') statusLabel = 'Zaplatené';
+            else if (item.status === 'incoming') statusLabel = 'Prijatá žiadosť';
+            else if (item.dueDate) {
+              const now = new Date();
+              now.setHours(0, 0, 0, 0);
+              const dueDate = new Date(item.dueDate);
+              dueDate.setHours(0, 0, 0, 0);
+              if (now > dueDate) statusLabel = 'Po splatnosti';
+            }
+
+            // Escape CSV values (wrap in quotes if contains comma, quote, or newline)
+            const escapeCSV = (val) => {
+              if (val == null) return '';
+              const str = String(val);
+              if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+                return '"' + str.replace(/"/g, '""') + '"';
+              }
+              return str;
+            };
+
+            return [
+              escapeCSV(dateStr),
+              escapeCSV(timeStr),
+              escapeCSV(item.accountName || ''),
+              escapeCSV(item.recipientName || ''),
+              escapeCSV(Number(item.amount).toFixed(2)),
+              'EUR',
+              escapeCSV(item.vs || ''),
+              escapeCSV(item.msg || ''),
+              escapeCSV(item.dueDate || ''),
+              escapeCSV(statusLabel)
+            ].join(',');
+          });
+
+          // Combine headers and rows
+          const csvContent = [headers.join(','), ...rows].join('\n');
+
+          // Create blob and download
+          const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.setAttribute('href', url);
+          link.setAttribute('download', 'historia-platieb-' + new Date().toISOString().split('T')[0] + '.csv');
+          link.style.visibility = 'hidden';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+
+          showToast('História exportovaná!', 'success');
+        };
+
         const deleteHistoryItem = async (reversedIndex) => {
           const actualIndex = paymentHistory.value.length - 1 - reversedIndex;
           paymentHistory.value.splice(actualIndex, 1);
@@ -3710,22 +3897,191 @@
           carouselRef, qrcodeContainer, settingsBtn, templatesBtn, historyBtn, cardArea, inputsArea, attachBtn, analyticsCarousel,
           isDarkMode, showSettings, settingsTab, themeMode, accentColor, accentColors, isAddingProfile, isEditingProfile, isQrVisible, paymeLinkCopied, showHistory, showTemplates, showCustomTagForm, showAmountSuggestions, attachedFile,
           payment, newProfile, profiles, activeProfileName, allTags, paymentHistory, analytics, filteredAnalytics, templates, filteredTemplates, templateSearch, newTemplate, isAddingTemplate, isEditingTemplate, unpaidPendingCount, hasIncomingRequests,
-          customTag, customTags, availableEmojis, tagColors, analyticsDateRange, customDateFrom, customDateTo, recentAmounts, ibanError, activeAnalyticsSlide, onAnalyticsScroll,
+          customTag, customTags, availableEmojis, tagColors, analyticsDateRange, customDateFrom, customDateTo, recentAmounts, ibanError, activeAnalyticsSlide, onAnalyticsScroll, dateRangeOptions, dateRangeLabels, dateRangeShortLabels,
           showCalculator, calcDisplay, calcResult, toggleCalculator, calcInput, calcClear, calcBackspace, calcApply,
           showTutorial, tutorialStep, tutorialSteps, tutorialCompleted, tooltipPosition, nextTutorialStep, prevTutorialStep, skipTutorial, restartTutorial,
           setThemeMode, setAccentColor, saveProfile, deleteProfile, toggleDefaultProfile, editProfile, cancelProfileForm, formatIban, getBankName, getCardColorClass, getTagLabel, getTagEmoji, getTagColor, selectTag, addCustomTag, generateVariableSymbol, generateQRCode, copyPaymeLink, sharePaymeLink,
-          closeQr, formatDate, clearHistory, deleteHistoryItem, markAsPaid, getPaymentStatusStyle, duplicatePayment, selectAmount, hideAmountSuggestions, saveTemplate, applyTemplate, editTemplate, cancelTemplateEdit, deleteTemplate, attachFile,
+          closeQr, formatDate, clearHistory, exportHistoryCSV, deleteHistoryItem, markAsPaid, getPaymentStatusStyle, duplicatePayment, selectAmount, hideAmountSuggestions, saveTemplate, applyTemplate, editTemplate, cancelTemplateEdit, deleteTemplate, attachFile,
           // Gemini exports
           geminiApiKey, isProcessingFile,
           // Toast notification
           toast, showToast,
           // Nostr exports
-          myNpub, myNsec, showNostrModal, selectedContacts, contactSearch, filteredContacts, isContactSelected, toggleContactSelection, removeSelectedContact, clearSelectedContacts, isSendingNostr, sendNostrPayment, copyToClipboard, copyNsec, showPrivKeyInput, inputPrivKey, loginWithNewKey, connectedRelays,
+          myNpub, myNsec, showNostrModal, selectedContacts, splitBillEnabled, contactSearch, filteredContacts, isContactSelected, toggleContactSelection, removeSelectedContact, clearSelectedContacts, isSendingNostr, sendNostrPayment, copyToClipboard, copyNsec, showPrivKeyInput, inputPrivKey, loginWithNewKey, connectedRelays,
           // Address Book Exports
           contacts, showAddContactModal, newContactData, saveNewContact, deleteContact, generateShareLink
         };
       }
     }).mount('#app');
+  </script>
+
+  <!-- PWA Installation & Service Worker -->
+  <script>
+    // PWA Installation Banner
+    let deferredPrompt;
+    let installBanner = null;
+
+    // Service Worker Registration
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', async () => {
+        try {
+          const registration = await navigator.serviceWorker.register('/sw.js', {
+            scope: '/'
+          });
+          console.log('SW registered: ', registration);
+          
+          // Update available
+          registration.addEventListener('updatefound', () => {
+            const newWorker = registration.installing;
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                showUpdateBanner();
+              }
+            });
+          });
+          
+        } catch (registrationError) {
+          console.log('SW registration failed: ', registrationError);
+        }
+      });
+    }
+
+    // PWA Install Prompt
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      showInstallBanner();
+    });
+
+    // Show Install Banner
+    function showInstallBanner() {
+      if (installBanner) return; // Already showing
+      
+      installBanner = document.createElement('div');
+      installBanner.className = 'fixed top-4 left-4 right-4 z-[100] bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-3 rounded-lg shadow-lg flex items-center gap-3 animate-slide-down';
+      installBanner.innerHTML = `
+        <svg class="w-6 h-6 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+        </svg>
+        <div class="flex-1 min-w-0">
+          <p class="font-bold text-sm">Nainštalovať Gimme</p>
+          <p class="text-xs opacity-90">Pridajte si aplikáciu na hlavnú obrazovku</p>
+        </div>
+        <button onclick="installPWA()" class="bg-white/20 hover:bg-white/30 px-3 py-1 rounded font-bold text-sm transition-colors">
+          Inštalovať
+        </button>
+        <button onclick="dismissInstallBanner()" class="text-white/80 hover:text-white p-1">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      `;
+      
+      document.body.appendChild(installBanner);
+      
+      // Auto-hide after 10 seconds
+      setTimeout(() => {
+        dismissInstallBanner();
+      }, 10000);
+    }
+
+    // Install PWA
+    async function installPWA() {
+      if (!deferredPrompt) return;
+      
+      deferredPrompt.prompt();
+      const result = await deferredPrompt.userChoice;
+      
+      if (result.outcome === 'accepted') {
+        console.log('User installed PWA');
+      }
+      
+      deferredPrompt = null;
+      dismissInstallBanner();
+    }
+
+    // Dismiss Install Banner
+    function dismissInstallBanner() {
+      if (installBanner) {
+        installBanner.remove();
+        installBanner = null;
+      }
+    }
+
+    // Show Update Banner
+    function showUpdateBanner() {
+      const updateBanner = document.createElement('div');
+      updateBanner.className = 'fixed top-4 left-4 right-4 z-[100] bg-green-600 text-white p-3 rounded-lg shadow-lg flex items-center gap-3';
+      updateBanner.innerHTML = `
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+        <div class="flex-1">
+          <p class="font-bold text-sm">Aktualizácia dostupná</p>
+          <p class="text-xs opacity-90">Nová verzia aplikácie je pripravená</p>
+        </div>
+        <button onclick="updatePWA(this.parentElement)" class="bg-white/20 hover:bg-white/30 px-3 py-1 rounded font-bold text-sm">
+          Obnoviť
+        </button>
+      `;
+      
+      document.body.appendChild(updateBanner);
+    }
+
+    // Update PWA
+    function updatePWA(banner) {
+      banner.remove();
+      if (navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
+      }
+      window.location.reload();
+    }
+
+    // Handle App Install Success
+    window.addEventListener('appinstalled', () => {
+      console.log('PWA was installed');
+      dismissInstallBanner();
+    });
+
+    // Handle URL parameters for shortcuts
+    const urlParams = new URLSearchParams(window.location.search);
+    const action = urlParams.get('action');
+    
+    if (action === 'quick-payment') {
+      // Focus on amount input when quick payment shortcut is used
+      setTimeout(() => {
+        const amountInput = document.querySelector('input[placeholder="0.00"]');
+        if (amountInput) amountInput.focus();
+      }, 500);
+    } else if (action === 'scan-receipt') {
+      // Open file picker for receipt scanning
+      setTimeout(() => {
+        const fileInput = document.querySelector('input[type="file"]');
+        if (fileInput) fileInput.click();
+      }, 500);
+    }
+
+    // Add CSS for install banner animation
+    if (!document.querySelector('#pwa-styles')) {
+      const style = document.createElement('style');
+      style.id = 'pwa-styles';
+      style.textContent = `
+        @keyframes slide-down {
+          from {
+            opacity: 0;
+            transform: translateY(-100%);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-slide-down {
+          animation: slide-down 0.3s ease-out;
+        }
+      `;
+      document.head.appendChild(style);
+    }
   </script>
 </body>
 
