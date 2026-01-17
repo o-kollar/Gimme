@@ -3985,6 +3985,93 @@
       }, 10000);
     }
 
+<!-- PWA Installation & Service Worker -->
+  <script>
+    // PWA Installation Banner
+    let deferredPrompt;
+    let installBanner = null;
+
+    // Service Worker Registration
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', async () => {
+        try {
+          const registration = await navigator.serviceWorker.register('/sw.js', {
+            scope: '/'
+          });
+          console.log('SW registered: ', registration);
+          
+          // Update available
+          registration.addEventListener('updatefound', () => {
+            const newWorker = registration.installing;
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                showUpdateBanner();
+              }
+            });
+          });
+          
+        } catch (registrationError) {
+          console.log('SW registration failed: ', registrationError);
+        }
+      });
+    }
+
+    // PWA Install Prompt
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      showInstallBanner();
+    });
+
+    // Show Install Banner - STYLED LIKE TOAST ALERTS
+    function showInstallBanner() {
+      if (installBanner) return; // Already showing
+      
+      installBanner = document.createElement('div');
+      
+      // Position: Centered at top, exactly like the Vue toasts
+      // We use fixed, left-1/2 and -translate-x-1/2 to center it
+      installBanner.className = 'fixed top-6 left-1/2 z-[100] w-full max-w-[340px] px-4 pointer-events-none flex justify-center animate-toast-in';
+      
+      // Inner HTML mimics the Toast structure (Pill shape, shadow-2xl, border)
+      installBanner.innerHTML = `
+        <div class="pointer-events-auto w-full px-5 py-3 rounded-full shadow-2xl border border-indigo-100 dark:border-slate-700 bg-white dark:bg-slate-800 flex items-center gap-3">
+          
+          <!-- Icon Circle (Using Accent/Indigo Color) -->
+          <div class="flex-shrink-0 w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center">
+             <svg class="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+          </div>
+
+          <!-- Text Content -->
+          <div class="flex-1 min-w-0">
+            <p class="text-xs font-bold text-slate-800 dark:text-slate-200">Nainštalovať aplikáciu</p>
+            <p class="text-[10px] text-slate-500 dark:text-slate-400 truncate">Pridať Gimme na plochu</p>
+          </div>
+
+          <!-- Action Button (Pill shaped) -->
+          <button onclick="installPWA()" class="px-4 py-1.5 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all active:scale-95 shadow-md shadow-indigo-200 dark:shadow-none">
+            Pridať
+          </button>
+
+          <!-- Dismiss X -->
+          <button onclick="dismissInstallBanner()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      `;
+      
+      document.body.appendChild(installBanner);
+      
+      // Auto-hide after 15 seconds
+      setTimeout(() => {
+        dismissInstallBanner();
+      }, 15000);
+    }
+
     // Install PWA
     async function installPWA() {
       if (!deferredPrompt) return;
@@ -4003,26 +4090,39 @@
     // Dismiss Install Banner
     function dismissInstallBanner() {
       if (installBanner) {
-        installBanner.remove();
-        installBanner = null;
+        // Add exit animation class before removing
+        installBanner.classList.remove('animate-toast-in');
+        installBanner.classList.add('animate-toast-out');
+        
+        setTimeout(() => {
+          if (installBanner) {
+            installBanner.remove();
+            installBanner = null;
+          }
+        }, 300); // Wait for animation
       }
     }
 
-    // Show Update Banner
+    // Show Update Banner (Reusing the same style)
     function showUpdateBanner() {
       const updateBanner = document.createElement('div');
-      updateBanner.className = 'fixed top-4 left-4 right-4 z-[100] bg-green-600 text-white p-3 rounded-lg shadow-lg flex items-center gap-3';
+      updateBanner.className = 'fixed top-6 left-1/2 z-[100] w-full max-w-[340px] px-4 pointer-events-none flex justify-center animate-toast-in';
+      
       updateBanner.innerHTML = `
-        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-        </svg>
-        <div class="flex-1">
-          <p class="font-bold text-sm">Aktualizácia dostupná</p>
-          <p class="text-xs opacity-90">Nová verzia aplikácie je pripravená</p>
+        <div class="pointer-events-auto w-full px-5 py-3 rounded-full shadow-2xl border border-emerald-100 dark:border-emerald-900/50 bg-white dark:bg-slate-800 flex items-center gap-3">
+          <div class="flex-shrink-0 w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center">
+             <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-xs font-bold text-slate-800 dark:text-slate-200">Aktualizácia</p>
+            <p class="text-[10px] text-slate-500 dark:text-slate-400">Nová verzia je dostupná</p>
+          </div>
+          <button onclick="updatePWA(this.closest('.fixed'))" class="px-4 py-1.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors shadow-md shadow-emerald-200 dark:shadow-none">
+            Obnoviť
+          </button>
         </div>
-        <button onclick="updatePWA(this.parentElement)" class="bg-white/20 hover:bg-white/30 px-3 py-1 rounded font-bold text-sm">
-          Obnoviť
-        </button>
       `;
       
       document.body.appendChild(updateBanner);
@@ -4030,7 +4130,7 @@
 
     // Update PWA
     function updatePWA(banner) {
-      banner.remove();
+      if(banner) banner.remove();
       if (navigator.serviceWorker.controller) {
         navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
       }
@@ -4048,36 +4148,51 @@
     const action = urlParams.get('action');
     
     if (action === 'quick-payment') {
-      // Focus on amount input when quick payment shortcut is used
       setTimeout(() => {
         const amountInput = document.querySelector('input[placeholder="0.00"]');
         if (amountInput) amountInput.focus();
       }, 500);
     } else if (action === 'scan-receipt') {
-      // Open file picker for receipt scanning
       setTimeout(() => {
         const fileInput = document.querySelector('input[type="file"]');
         if (fileInput) fileInput.click();
       }, 500);
     }
 
-    // Add CSS for install banner animation
+    // Add CSS for toast animations (Exact match to Vue toast animations)
     if (!document.querySelector('#pwa-styles')) {
       const style = document.createElement('style');
       style.id = 'pwa-styles';
       style.textContent = `
-        @keyframes slide-down {
-          from {
-            opacity: 0;
-            transform: translateY(-100%);
+        @keyframes toast-in-js {
+          0% { 
+            opacity: 0; 
+            transform: translateX(-50%) translateY(-30px) scale(0.92); 
+            filter: blur(4px);
           }
-          to {
-            opacity: 1;
-            transform: translateY(0);
+          100% { 
+            opacity: 1; 
+            transform: translateX(-50%) translateY(0) scale(1); 
+            filter: blur(0px);
           }
         }
-        .animate-slide-down {
-          animation: slide-down 0.3s ease-out;
+        @keyframes toast-out-js {
+          0% { 
+            opacity: 1; 
+            transform: translateX(-50%) translateY(0) scale(1); 
+          }
+          100% { 
+            opacity: 0; 
+            transform: translateX(-50%) translateY(-20px) scale(0.95); 
+          }
+        }
+        .animate-toast-in {
+          animation: toast-in-js 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+          transform: translateX(-50%); /* Ensure centering is maintained during animation */
+        }
+        .animate-toast-out {
+          animation: toast-out-js 0.3s ease-in forwards;
+          transform: translateX(-50%);
         }
       `;
       document.head.appendChild(style);
@@ -4086,3 +4201,4 @@
 </body>
 
             </html>
+
