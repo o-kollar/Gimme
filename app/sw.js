@@ -1,15 +1,15 @@
 const CACHE_NAME = 'gimme-pwa-v1';
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/offline.html',
-  '/favicon/site.webmanifest',
-  '/favicon/android-chrome-192x192.png',
-  '/favicon/android-chrome-512x512.png',
-  '/favicon/apple-touch-icon.png',
-  '/favicon/favicon-32x32.png',
-  '/favicon/favicon-16x16.png',
-  '/favicon/favicon.ico',
+  './',
+  './index.html',
+  './offline.html',
+  './favicon/site.webmanifest',
+  './favicon/android-chrome-192x192.png',
+  './favicon/android-chrome-512x512.png',
+  './favicon/apple-touch-icon.png',
+  './favicon/favicon-32x32.png',
+  './favicon/favicon-16x16.png',
+  './favicon/favicon.ico',
   // External CDN resources
   'https://cdn.tailwindcss.com',
   'https://unpkg.com/vue@3/dist/vue.global.js',
@@ -160,5 +160,6 @@ self.addEventListener('message', (event) => {
     self.skipWaiting();
   }
 });
+
 
 console.log('Service Worker: Loaded successfully');
