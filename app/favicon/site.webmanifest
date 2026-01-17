@@ -2,8 +2,8 @@
   "name": "Gimme - Payment QR Generator",
   "short_name": "Gimme",
   "description": "Modern Slovak payment QR code generator with Nostr integration, AI receipt scanning, and analytics",
-  "start_url": "/Gimme/app/",
-"scope": "/Gimme/app/",
+  "start_url": "../",
+  "scope": "../",
   "display": "standalone",
   "orientation": "portrait-primary",
   "theme_color": "#6366f1",
@@ -85,3 +85,4 @@
   }
 
 }
+
